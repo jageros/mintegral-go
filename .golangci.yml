@@ -59,4 +59,5 @@ formatters:
     - goimports
   settings:
     goimports:
-      local-prefixes: github.com/jageros/mintegral-go
+      local-prefixes:
+        - github.com/jageros/mintegral-go
