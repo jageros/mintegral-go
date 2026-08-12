@@ -261,44 +261,6 @@ func TestDoJSON_APIErrorUsesInjectedClockForRetryAfterDate(t *testing.T) {
 	}
 }
 
-func TestDoJSON_rejectsMissingDataUnlessExplicitlyAllowed(t *testing.T) {
-	// Given
-	client, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
-		return jsonResponse(http.StatusOK, `{"code":200,"data":null}`), nil
-	})}))
-	if err != nil {
-		t.Fatalf("NewClient() error = %v", err)
-	}
-
-	cases := []struct {
-		name  string
-		allow bool
-		want  error
-	}{
-		{name: "default rejects", want: ErrUnexpectedResponse},
-		{name: "explicitly allowed", allow: true},
-	}
-	for _, testCase := range cases {
-		t.Run(testCase.name, func(t *testing.T) {
-			// When
-			_, callErr := doJSON[struct{}](context.Background(), client, requestSpec{
-				operation:      "test.empty_data",
-				method:         http.MethodGet,
-				path:           "/test",
-				allowEmptyData: testCase.allow,
-			}, nil)
-
-			// Then
-			if testCase.want == nil && callErr != nil {
-				t.Fatalf("doJSON() error = %v", callErr)
-			}
-			if testCase.want != nil && !errors.Is(callErr, testCase.want) {
-				t.Fatalf("doJSON() error = %v, want %v", callErr, testCase.want)
-			}
-		})
-	}
-}
-
 func closeTestResponse(t *testing.T, response *http.Response) {
 	t.Helper()
 	if err := response.Body.Close(); err != nil {

@@ -36,6 +36,59 @@ func TestAccountServiceBalance_sendsAuthenticatedGet(t *testing.T) {
 	}
 }
 
+func TestAccountServiceBalance_decodesNestedAndTopLevelNull(t *testing.T) {
+	cases := []struct {
+		name string
+		body string
+		want AccountBalance
+	}{
+		{name: "nested balance", body: `{"code":200,"data":{"list":[{"balance":null}]}}`, want: AccountBalance{List: []AccountBalanceItem{{Balance: ""}}}},
+		{name: "top level data", body: `{"code":200,"data":null}`, want: AccountBalance{}},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Given
+			client := accountNullTestClient(t, testCase.body)
+
+			// When
+			balance, err := client.Accounts().Balance(context.Background())
+
+			// Then
+			if err != nil || !accountBalanceEqual(balance, testCase.want) {
+				t.Fatalf("Balance() = %#v, %v; want %#v and nil error", balance, err, testCase.want)
+			}
+		})
+	}
+}
+
+func accountNullTestClient(t *testing.T, body string) *Client {
+	t.Helper()
+	client, err := NewClient(
+		WithAPIBaseURL("https://api.example.test"),
+		WithDefaultCredentials(mustCredentials(t, "access", "api")),
+		WithClock(fixedClock{value: testTime}),
+		WithHTTPClient(&http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+			return jsonResponse(http.StatusOK, body), nil
+		})}),
+	)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	return client
+}
+
+func accountBalanceEqual(left, right AccountBalance) bool {
+	if left.Total != right.Total || len(left.List) != len(right.List) {
+		return false
+	}
+	for index := range left.List {
+		if left.List[index] != right.List[index] {
+			return false
+		}
+	}
+	return true
+}
+
 func newServiceClient(t *testing.T, baseURL string, credentials Credentials) *Client {
 	t.Helper()
 	client, err := NewClient(

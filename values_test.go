@@ -54,6 +54,32 @@ func TestDate_JSON_requiresCanonicalDate(t *testing.T) {
 	}
 }
 
+func TestDate_UnmarshalJSON_clearsPrepopulatedValue_whenJSONNull(t *testing.T) {
+	// Given
+	date := Date("2026-08-12")
+
+	// When
+	err := date.UnmarshalJSON([]byte(" \n null \t"))
+
+	// Then
+	if err != nil || date != "" {
+		t.Fatalf("Date.UnmarshalJSON() = %q, %v; want empty date and nil error", date, err)
+	}
+}
+
+func TestDate_UnmarshalJSON_rejectsNilReceiver(t *testing.T) {
+	// Given
+	var date *Date
+
+	// When
+	err := date.UnmarshalJSON([]byte(`"2026-08-12"`))
+
+	// Then
+	if !errors.Is(err, ErrUnexpectedResponse) {
+		t.Fatalf("Date.UnmarshalJSON() error = %v, want ErrUnexpectedResponse", err)
+	}
+}
+
 func TestDecimalText_ParseDecimalText_preservesExactRepresentation(t *testing.T) {
 	// Given
 	raw := "12345678901234567890.12345678901234567890"
@@ -90,6 +116,32 @@ func TestDecimalText_UnmarshalJSON_acceptsNumberAndString(t *testing.T) {
 	}
 	if got := string(fromString); got != "1.20e+03" {
 		t.Fatalf("string decimal = %q, want exact representation", got)
+	}
+}
+
+func TestDecimalText_UnmarshalJSON_clearsPrepopulatedValue_whenJSONNull(t *testing.T) {
+	// Given
+	decimal := DecimalText("12.50")
+
+	// When
+	err := decimal.UnmarshalJSON([]byte(" \n null \t"))
+
+	// Then
+	if err != nil || decimal != "" {
+		t.Fatalf("DecimalText.UnmarshalJSON() = %q, %v; want empty decimal and nil error", decimal, err)
+	}
+}
+
+func TestDecimalText_UnmarshalJSON_rejectsNilReceiver(t *testing.T) {
+	// Given
+	var decimal *DecimalText
+
+	// When
+	err := decimal.UnmarshalJSON([]byte(`12.50`))
+
+	// Then
+	if !errors.Is(err, ErrUnexpectedResponse) {
+		t.Fatalf("DecimalText.UnmarshalJSON() error = %v, want ErrUnexpectedResponse", err)
 	}
 }
 

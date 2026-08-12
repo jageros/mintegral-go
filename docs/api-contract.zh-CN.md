@@ -8,6 +8,14 @@
 
 所有 JSON 管理接口的成功业务码为 `code=200`；HTTP 200 但其他业务码仍是失败。响应可能使用 `msg` 或 `message`：只有一个非空时采用；二者都非空且不相同则视为契约错误。
 
+## JSON 响应与 `null` 语义
+
+- 对自定义解码器值，Provider 响应中的已知字段仍按严格类型解析；唯一例外是字段显式为 JSON 字面量 `null`：此时解码为对应 Go 零值，并清空复用中的目标。
+- 成功业务包（`code=200`）若显式返回 `data: null`，返回零值结果 `T`。`data` 字段缺失仍是契约错误，唯一例外是这六个已记录的 mutation：`UpdateOfferBudget`、`UpdateOfferStatus`、`UpdateOfferTarget`（traffic）、`UpdateOfferAudience`、`UpdateOfferTargetGoal`、`DeleteAudience`。
+- HTTP 错误或业务错误即使带有 `data: null`，仍返回对应的 typed error；不会按成功零值处理。
+- 字符串 `"null"`、字段缺失以及非 `null` 的无效类型都不属于 JSON `null`，仍按原有严格规则处理。
+- 请求侧必填校验和零值 Marshal 行为保持严格；报表 TSV 契约不变。
+
 | # | SDK 操作 | 方法 / 路径 | 编码 | 限制、权限或生命周期 | 弃用 | 官方文档 |
 | --- | --- | --- | --- | --- | --- |
 | 1 | AccountBalance | `GET /api/open/v1/account/balance` | 无 body | token；读取账户结算余额 | 否 | [账户余额](https://adv.mintegral.com/doc/en/guide/account/getAccountBalance.html) |

@@ -1,6 +1,7 @@
 package mintegral
 
 import (
+	"bytes"
 	//nolint:gosec // Mintegral 人群上传协议要求使用 MD5 内容摘要。
 	"crypto/md5"
 	"encoding/hex"
@@ -67,6 +68,10 @@ func (value *Date) UnmarshalJSON(data []byte) error {
 	if value == nil {
 		return fmt.Errorf("%w: date destination is nil", ErrUnexpectedResponse)
 	}
+	if isJSONNull(data) {
+		*value = ""
+		return nil
+	}
 	var text string
 	if err := json.Unmarshal(data, &text); err != nil {
 		return fmt.Errorf("%w: date must be a JSON string", ErrUnexpectedResponse)
@@ -114,6 +119,10 @@ func (value *DecimalText) UnmarshalJSON(data []byte) error {
 	if value == nil {
 		return fmt.Errorf("%w: decimal destination is nil", ErrUnexpectedResponse)
 	}
+	if isJSONNull(data) {
+		*value = ""
+		return nil
+	}
 	decimal, err := parseDecimalJSON(data)
 	if err != nil {
 		return err
@@ -135,6 +144,10 @@ func parseDecimalJSON(data []byte) (DecimalText, error) {
 		}
 	}
 	return "", fmt.Errorf("%w: decimal must be a JSON number or decimal string", ErrUnexpectedResponse)
+}
+
+func isJSONNull(data []byte) bool {
+	return bytes.Equal(bytes.TrimSpace(data), []byte("null"))
 }
 
 // ContentMD5 是 32 位小写十六进制 MD5 内容摘要。

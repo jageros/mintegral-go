@@ -54,23 +54,36 @@ func (s *ReportService) status(ctx context.Context, query *ReportQuery, options 
 	}
 	permissionDenied := containsPermissionDenied(message)
 	message = redactAPIErrorMessage(message, s.client.requestSensitiveValues(&spec, options, response)...)
+	if response.StatusCode != http.StatusOK || (envelope.Code != 200 && envelope.Code != 201 && envelope.Code != 202) {
+		return status, &APIError{Operation: "reports.status", HTTPStatus: response.StatusCode, Code: envelope.Code, Message: message, permissionDenied: permissionDenied}
+	}
+	if isJSONNull(envelope.Data) {
+		return status, nil
+	}
+	if len(envelope.Data) == 0 {
+		return status, fmt.Errorf("%w: report status returned missing data", ErrUnexpectedResponse)
+	}
 	var data struct {
 		Hours      reportHours `json:"hours"`
 		IsComplete bool        `json:"is_complete"`
 	}
-	if len(envelope.Data) > 0 && json.Unmarshal(envelope.Data, &data) != nil {
+	if json.Unmarshal(envelope.Data, &data) != nil {
 		return status, fmt.Errorf("%w: report status data", ErrUnexpectedResponse)
 	}
 	status = ReportStatus{Code: envelope.Code, Hours: []int(data.Hours), IsComplete: data.IsComplete}
-	if response.StatusCode != http.StatusOK || (envelope.Code != 200 && envelope.Code != 201 && envelope.Code != 202) {
-		return status, &APIError{Operation: "reports.status", HTTPStatus: response.StatusCode, Code: envelope.Code, Message: message, permissionDenied: permissionDenied}
-	}
 	return status, nil
 }
 
 type reportHours []int
 
 func (h *reportHours) UnmarshalJSON(data []byte) error {
+	if h == nil {
+		return fmt.Errorf("%w: report hours destination is nil", ErrUnexpectedResponse)
+	}
+	if isJSONNull(data) {
+		*h = nil
+		return nil
+	}
 	var values []int
 	if err := json.Unmarshal(data, &values); err == nil {
 		*h = values

@@ -19,7 +19,7 @@ type responseEnvelope struct {
 	Code    int             `json:"code"`
 }
 
-func decodeEnvelope[T any](response *http.Response, operation string, allowEmptyData bool, now time.Time, sensitiveValues ...string) (T, error) {
+func decodeEnvelope[T any](response *http.Response, operation string, allowMissingData bool, now time.Time, sensitiveValues ...string) (T, error) {
 	var zero T
 	body, err := readBounded(response.Body, maxJSONResponseBytes)
 	if err != nil {
@@ -43,11 +43,14 @@ func decodeEnvelope[T any](response *http.Response, operation string, allowEmpty
 			permissionDenied: containsPermissionDenied(message),
 		}
 	}
-	if len(envelope.Data) == 0 || string(envelope.Data) == "null" {
-		if allowEmptyData {
+	if isJSONNull(envelope.Data) {
+		return zero, nil
+	}
+	if len(envelope.Data) == 0 {
+		if allowMissingData {
 			return zero, nil
 		}
-		return zero, fmt.Errorf("%w: %s returned empty data", ErrUnexpectedResponse, operation)
+		return zero, fmt.Errorf("%w: %s returned missing data", ErrUnexpectedResponse, operation)
 	}
 	var data T
 	if err := json.Unmarshal(envelope.Data, &data); err != nil {

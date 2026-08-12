@@ -174,6 +174,13 @@ type Offer struct {
 
 // UnmarshalJSON 兼容广告单元接口把 campaign_id 返回为 number 或十进制字符串。
 func (value *Offer) UnmarshalJSON(data []byte) error {
+	if value == nil {
+		return fmt.Errorf("%w: offer destination is nil", ErrUnexpectedResponse)
+	}
+	if isJSONNull(data) {
+		*value = Offer{}
+		return nil
+	}
 	type offerAlias Offer
 	var wire struct {
 		*offerAlias
@@ -184,6 +191,10 @@ func (value *Offer) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if len(wire.CampaignID) == 0 {
+		return nil
+	}
+	if isJSONNull(wire.CampaignID) {
+		value.CampaignID = 0
 		return nil
 	}
 	raw := string(wire.CampaignID)
@@ -295,6 +306,13 @@ func (value BudgetAmount) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON 接受 OPEN、JSON number 或十进制字符串。
 func (value *BudgetAmount) UnmarshalJSON(data []byte) error {
+	if value == nil {
+		return fmt.Errorf("%w: budget destination is nil", ErrUnexpectedResponse)
+	}
+	if isJSONNull(data) {
+		*value = ""
+		return nil
+	}
 	if string(data) == `"OPEN"` {
 		*value = OpenBudget
 		return nil

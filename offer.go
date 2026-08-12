@@ -93,7 +93,7 @@ func (s OfferService) UpdateBudget(ctx context.Context, request UpdateOfferBudge
 		return fmt.Errorf("%w: budget is required", ErrInvalidRequest)
 	}
 	spec := offerWriteSpec("offer.update_budget", http.MethodPut, "/api/open/v1/offer/budget", request)
-	spec.allowEmptyData = true
+	spec.allowMissingData = true
 	_, err := doJSON[struct{}](ctx, s.client, spec, options)
 	return err
 }
@@ -107,7 +107,7 @@ func (s OfferService) SetStatus(ctx context.Context, request SetOfferStatusReque
 		return fmt.Errorf("%w: status must be RUNNING or STOPPED", ErrInvalidRequest)
 	}
 	spec := offerWriteSpec("offer.set_status", http.MethodPut, "/api/open/v1/offer/status", request)
-	spec.allowEmptyData = true
+	spec.allowMissingData = true
 	_, err := doJSON[struct{}](ctx, s.client, spec, options)
 	return err
 }
@@ -126,7 +126,7 @@ func (s OfferService) UpdateTrafficDelivery(ctx context.Context, request UpdateT
 		MTGID   string            `json:"mtgid"`
 	}{request.OfferID, request.Option, strings.Join(request.MTGIDs, ",")}
 	spec := offerWriteSpec("offer.update_traffic", http.MethodPut, "/api/open/v1/offer/target", body)
-	spec.allowEmptyData = true
+	spec.allowMissingData = true
 	_, err := doJSON[struct{}](ctx, s.client, spec, options)
 	return err
 }
@@ -152,7 +152,7 @@ func (s OfferService) SetAudiences(ctx context.Context, request SetOfferAudience
 		return fmt.Errorf("%w: at least one audience setting is required", ErrInvalidRequest)
 	}
 	spec := offerWriteSpec("offer.set_audiences", http.MethodPut, "/api/open/v1/offer/target-audience", request)
-	spec.allowEmptyData = true
+	spec.allowMissingData = true
 	_, err := doJSON[struct{}](ctx, s.client, spec, options)
 	return err
 }
@@ -166,7 +166,7 @@ func (s OfferService) UpdateTargetGoal(ctx context.Context, request UpdateOfferT
 		return fmt.Errorf("%w: at least one target goal is required", ErrInvalidRequest)
 	}
 	spec := offerWriteSpec("offer.update_target_goal", http.MethodPut, "/api/open/v3/offer/target_goal", request)
-	spec.allowEmptyData = true
+	spec.allowMissingData = true
 	_, err := doJSON[struct{}](ctx, s.client, spec, options)
 	return err
 }

@@ -22,19 +22,19 @@ const (
 type bodyFactory func() (io.ReadCloser, int64, error)
 
 type requestSpec struct {
-	query          func() (url.Values, error)
-	body           bodyFactory
-	header         http.Header
-	absoluteURL    string
-	operation      string
-	method         string
-	path           string
-	contentType    string
-	target         baseTarget
-	authenticated  bool
-	allowEmptyData bool
-	retryable      bool
-	outcomeRisk    bool
+	query            func() (url.Values, error)
+	body             bodyFactory
+	header           http.Header
+	absoluteURL      string
+	operation        string
+	method           string
+	path             string
+	contentType      string
+	target           baseTarget
+	authenticated    bool
+	allowMissingData bool
+	retryable        bool
+	outcomeRisk      bool
 }
 
 type requestConfig struct {
@@ -85,7 +85,7 @@ func doJSON[T any](ctx context.Context, client *Client, spec requestSpec, option
 		return zero, fmt.Errorf("%w: %s returned no response", ErrTransport, spec.operation)
 	}
 	sensitiveValues := client.requestSensitiveValues(&spec, options, response)
-	result, decodeErr := decodeEnvelope[T](response, spec.operation, spec.allowEmptyData, client.clock.Now(), sensitiveValues...)
+	result, decodeErr := decodeEnvelope[T](response, spec.operation, spec.allowMissingData, client.clock.Now(), sensitiveValues...)
 	closeErr := response.Body.Close()
 	if decodeErr != nil {
 		return zero, errors.Join(decodeErr, closeErr)

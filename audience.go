@@ -84,7 +84,7 @@ func (s *AudienceService) Delete(ctx context.Context, request DeleteAudienceRequ
 			return fmt.Errorf("%w: audience ID must be positive", ErrInvalidRequest)
 		}
 	}
-	_, err := doJSON[struct{}](ctx, s.client, requestSpec{operation: "audience.delete", method: http.MethodDelete, path: audiencePath, body: jsonBody(request), contentType: "application/json", authenticated: true, outcomeRisk: true, allowEmptyData: true}, options)
+	_, err := doJSON[struct{}](ctx, s.client, requestSpec{operation: "audience.delete", method: http.MethodDelete, path: audiencePath, body: jsonBody(request), contentType: "application/json", authenticated: true, outcomeRisk: true, allowMissingData: true}, options)
 	return err
 }
 
