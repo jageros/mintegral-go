@@ -1,0 +1,53 @@
+version: '3'
+
+tasks:
+  fmt:
+    desc: Format Go source files.
+    cmds:
+      - gofumpt -w .
+      - goimports -local github.com/jageros/mintegral-go -w .
+
+  fmt-check:
+    desc: Fail when Go source files are not gofumpt and goimports formatted.
+    cmds:
+      - test -z "$(gofumpt -l .)"
+      - test -z "$(goimports -local github.com/jageros/mintegral-go -l .)"
+
+  examples:
+    desc: Run public SDK examples as an external consumer.
+    cmds:
+      - go test -run '^Example' ./...
+
+  test:
+    desc: Run deterministic package tests without external credentials or network.
+    cmds:
+      - go test -shuffle=on -count=1 ./...
+
+  race:
+    desc: Run package tests with the race detector.
+    cmds:
+      - go test -race -shuffle=on -count=1 ./...
+
+  vet:
+    desc: Run Go vet.
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: Run the SDK lint policy.
+    cmds:
+      - golangci-lint run ./...
+
+  nilaway:
+    desc: Run nilness analysis.
+    cmds:
+      - nilaway ./...
+
+  build:
+    desc: Build all SDK packages.
+    cmds:
+      - go build ./...
+
+  ci:
+    desc: Run the complete local CI suite.
+    deps: [fmt-check, test, race, examples, vet, lint, nilaway, build]

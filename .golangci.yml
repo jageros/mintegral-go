@@ -1,0 +1,62 @@
+version: "2"
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+  tests: true
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - errcheck
+    - errorlint
+    - gocritic
+    - gosec
+    - misspell
+    - nilerr
+    - noctx
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    revive:
+      rules:
+        - name: exported
+        - name: error-return
+        - name: error-naming
+        - name: error-strings
+        - name: increment-decrement
+        - name: unexported-return
+    staticcheck:
+      checks:
+        - all
+
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes: github.com/jageros/mintegral-go
